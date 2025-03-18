@@ -19,7 +19,7 @@ export default function Stranger() {
       } 
 
       console.log("Joined room: " + roomId);
-      redirect("/game/" + roomId)
+      redirect("/game/stranger/" + roomId)
     })
   };
 

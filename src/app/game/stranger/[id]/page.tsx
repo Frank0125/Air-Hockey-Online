@@ -1,12 +1,12 @@
 "use client"
 
-import { socket } from "../../../socket";
+import { socket } from "../../../../socket";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 
 import { useLoading } from "@/hooks/useLoading";
-import Board from "../../assets/files/Game_Board2.svg";
+import Board from "../../../assets/files/Game_Board2.svg";
 import styles from "./page.module.css";
 import { Button } from "@/components/Button/Button";
 import { TextInput } from "@/components/TextInput/TextInput"
@@ -14,13 +14,18 @@ import { Title } from "@/components/Title/Title";
 import { NotFound } from "@/components/NotFound/NotFound";
 import { Room } from "@/interfaces/Room"
 
-export default function GameRoom() {
+export default function StrangerGameRoom() {
     const [value, setValue] = useState("Mensaje por Defecto");
-    const [room, setRoom] = useState<Room | null>(null)
+    const [room, setRoom] = useState<Room | null>(null);
     const { id } = useParams();
     const { loading, setLoading } = useLoading();
 
     function sendMessage() {
+        if (!id) {
+            alert("No match ID given.")
+            setLoading(false)
+            return;
+        }
         socket.emit("room:update",  id, value, (error : Error, result : string) => {
             if(error){
                 alert("There has been an error" + error)
@@ -31,24 +36,19 @@ export default function GameRoom() {
         setLoading(false);
     }
 
-    function receiveMessage() {
-        socket.emit("room:receive", id, (error : Error, result : string) => {
-            if(error){
-                alert("There has been an error" + error)
-            }
-            console.log("receiveD?");
-        })
-        setLoading(false);
-    }
-
     useEffect(() => {
         function handleRoomGet(room: Room) {
             setRoom(room);
+            if (room) {
+                alert("todobien")
+            }
         }
         function getRoom() {
             socket.on("room:get", handleRoomGet);
         }
+
         getRoom();
+
         if (room === null) {
             setValue("Null");
         } else if (room === undefined) {
@@ -79,15 +79,6 @@ export default function GameRoom() {
                     onClick={() => {
                         setLoading(true);
                         sendMessage();
-                    }}
-                    loading = { loading }
-                />
-                <Button
-                    size = "large"
-                    text = "Receive"
-                    onClick={() => {
-                        setLoading(true);
-                        receiveMessage();
                     }}
                     loading = { loading }
                 />
