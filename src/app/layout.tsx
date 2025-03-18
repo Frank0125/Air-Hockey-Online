@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
+
+import Loading from "./loading";
 
 export const metadata: Metadata = {
   title: "Air Hockey Online",
@@ -14,7 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {children}
+        <Suspense fallback = { <Loading /> }>
+          {children}
+        </Suspense>
       </body>
     </html>
   );

@@ -10,13 +10,13 @@ import { useLoading } from "@/hooks/useLoading";
 import styles from "./page.module.css";
 import Background from "./assets/files/Menu_Background.png";
 import { Button } from "@/components/Button/Button";
-import { Loading } from "@/components/Loading/Loading";
+// import { Loading } from "@/components/Loading/Loading";
 import { Title } from "@/components/Title/Title";
 
 export default function Home() {
   const [isConnected, setIsConnected] = useState(false);
   const { loading,  setLoading } = useLoading();
-
+  
   useEffect(() => {
     if (socket.connected) {
       onConnect();
@@ -40,7 +40,7 @@ export default function Home() {
     };
   }, []);
 
-  return isConnected ? (
+  return (
     <>    
       <div className={styles.background}>
         <div className={styles.container}>
@@ -68,7 +68,7 @@ export default function Home() {
             loading = {loading}
           />
           <br /><br /><br />
-          <Suspense fallback={<Loading />}>
+          <Suspense>
               <div className={styles.aboutContainer}>
                 <a href="https://github.com/Frank0125/Air-Hockey-Online">
                   <p className={styles.aboutText}>About</p>
@@ -85,9 +85,5 @@ export default function Home() {
         />
       </div>
     </> 
-    ) : (
-      <>
-        <Loading />
-      </>
-    );
+    )
 }
