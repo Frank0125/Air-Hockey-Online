@@ -1,14 +1,22 @@
 import { Room } from '@/interfaces/Room';
 import { Server, Socket } from 'socket.io';
 
+interface RoomCreatePayload {
+    type: 'friend' | 'stranger';
+}
+
 const createID = (): string => {
     return crypto.randomUUID(); // Generates a unique ID
 };
 
 const roomHandler = (io: Server, socket: Socket, rooms: Room[]) => {
-    const create = (payload: any, callback: (error: Error | null, result: string | null) => void) => {
+    const create = (payload: RoomCreatePayload, callback: (error: Error | null, result: string | null) => void) => {
+        if (!payload || !payload.type) {
+            return callback(new Error("Invalid payload"), null);
+        }
+
         if (payload.type === "stranger") {
-            const index = rooms.findIndex((room: any) => room.vacant == true);
+            const index = rooms.findIndex((room: Room) => room.vacant === true);
             if (index >= 0) {
                 const room = rooms[index]; // get the first vacant room
                 room.players[socket.id] = { // add the player to the room with no message
@@ -18,29 +26,33 @@ const roomHandler = (io: Server, socket: Socket, rooms: Room[]) => {
                 socket.join(room.roomId);
                 io.to(room.roomId).emit("room:get", room);
                 callback(null, room.roomId);
-            } 
-
-            const room = {
-                roomId: createID(),
-                players: {
-                    [socket.id]: {
-                        message:  null
-                    },
-                },
-                vacant: true,
-                chat:  null
             }
-
-            rooms.push(room);
-            socket.join(room.roomId);
-            io.to(room.roomId).emit("room:get", room);
-            callback(null, room.roomId);
-        } else {
-            callback(new Error("Room not found"), null);
         }
+
+        const room = {
+            roomId: createID(),
+            players: {
+                [socket.id]: {
+                    message:  null
+                },
+            },
+            vacant: true,
+            chat:  null
+        }
+
+        rooms.push(room);
+        socket.join(room.roomId);
+        io.to(room.roomId).emit("room:get", room);
+        callback(null, room.roomId);
     }
 
     const update = (roomId: string, playerMessage: string, callback: (error: Error | null, result: string | null) => void) => {
+        if (!roomId || typeof roomId !== 'string') {
+            return callback(new Error("Invalid room ID"), null);
+        }
+
+        console.log(rooms);
+
         const index = rooms.findIndex((room) => room.roomId === roomId);
         if (index >= 0) {
             const room = rooms[index];
@@ -55,6 +67,10 @@ const roomHandler = (io: Server, socket: Socket, rooms: Room[]) => {
     }
 
     const receive = (roomId: string, callback: (error: Error | null, result: string | null) => void) => {
+        if (!roomId || typeof roomId !== 'string') {
+            return callback(new Error("Invalid room ID"), null);
+        }
+
         const index = rooms.findIndex((room) => room.roomId === roomId);
         if (index >= 0) {
             const room = rooms[index];
@@ -67,9 +83,10 @@ const roomHandler = (io: Server, socket: Socket, rooms: Room[]) => {
             callback(new Error("Room not found"), null);
         }
     }
+
     socket.on("room:create", create);
-    socket.on("room:update", update)
-    socket.on("room:receive", receive)
+    socket.on("room:update", update);
+    socket.on("room:receive", receive);
 }
 
 export default roomHandler;
