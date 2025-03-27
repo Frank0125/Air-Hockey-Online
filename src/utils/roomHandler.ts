@@ -84,6 +84,26 @@ const roomHandler = (io: Server, socket: Socket, rooms: Room[]) => {
         }
     }
 
+    socket.on("disconnect", () => {
+        const roomIndex = rooms.findIndex(room => 
+            Object.keys(room.players).includes(socket.id)
+        );
+        
+        if (roomIndex >= 0) {
+            const room = rooms[roomIndex];
+            delete room.players[socket.id];
+            
+            // Si no quedan jugadores, eliminar la sala
+            if (Object.keys(room.players).length === 0) {
+                rooms.splice(roomIndex, 1);
+            } else {
+                // Si quedan jugadores, marcar como vacante
+                room.vacant = true;
+                io.to(room.roomId).emit("room:get", room);
+            }
+        }
+    });
+
     socket.on("room:create", create);
     socket.on("room:update", update);
     socket.on("room:receive", receive);
