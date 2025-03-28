@@ -1,13 +1,16 @@
 "use client";
 
-import styles from "./page.module.css";
 import { socket } from "../../../socket";
 import { redirect } from "next/navigation";
 
+import styles from "./page.module.css";
+import { useLoading } from "@/hooks/useLoading";
 import { Button } from "@/components/Button/Button";
 import { Title } from "@/components/Title/Title"
 //IN PROGRESS
 export default function Stranger() {
+  const { loading,  setLoading } = useLoading();
+
   function createStrangerRoom() {
     socket.emit("room:create", { type: "stranger"}, (error : Error, roomId : string) => {
       if (error) {
@@ -20,28 +23,31 @@ export default function Stranger() {
     })
   };
 
-
   return (
     <div className={styles.background}>
       <div className={styles.container}>
         <Title
           text = "Play with a Stranger!!"
-          fontSize= "2.6rem"
-          margingTop= "0.6rem"
+          fontSize = "2.6rem"
+          margingTop = "0.6rem"
         />
         <Button 
-          text="Go To Menu" 
-          onClick={() => {
+          text = "Join Room" 
+          onClick = {() => {
+            createStrangerRoom();
+            setLoading(true);
+          }} 
+          size = "large"
+          loading = { loading }
+        />  
+        <Button 
+          text = "Go To Menu" 
+          onClick = {() => {
+            setLoading(true);
             redirect("/");
           }} 
-          size="large"
-        />
-        <Button 
-          text="Join Room" 
-          onClick={() => {
-            createStrangerRoom();
-          }} 
-          size="large"
+          size = "large"
+          loading = { loading }
         />
         <br /><br /><br /><br /><br /><br /><br />
       </div>

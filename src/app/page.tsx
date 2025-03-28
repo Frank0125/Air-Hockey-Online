@@ -5,15 +5,17 @@ import { socket } from "../socket";
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import { Suspense } from "react";
+
+import { useLoading } from "@/hooks/useLoading";
 import styles from "./page.module.css";
 import Background from "./assets/files/Menu_Background.png";
-
 import { Button } from "@/components/Button/Button";
 import { Loading } from "@/components/Loading/Loading";
 import { Title } from "@/components/Title/Title";
 
 export default function Home() {
   const [isConnected, setIsConnected] = useState(false);
+  const { loading,  setLoading } = useLoading();
 
   useEffect(() => {
     if (socket.connected) {
@@ -30,6 +32,7 @@ export default function Home() {
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
+    setLoading(false);
 
     return () => {
       socket.off("connect", onConnect);
@@ -49,16 +52,20 @@ export default function Home() {
           <Button
             text="Play With A Friend"
             onClick={() => {
+              setLoading(true);
               redirect("/game/friend");
             }}
-            size="large"
+            size = "large"
+            loading = {loading}
           />
           <Button
             text="Play With A Stranger"
             onClick={() => {
+              setLoading(true);
               redirect("/game/stranger");
             }}
             size="large"
+            loading = {loading}
           />
           <br /><br /><br />
           <Suspense fallback={<Loading />}>

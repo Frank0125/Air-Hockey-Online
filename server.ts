@@ -1,14 +1,16 @@
 import next from "next";
 import { createServer } from "node:http";
 import { Server } from "socket.io";
+
+import "./envConfig";
 import roomHandler from "./src/utils/roomHandler";
 import { Room } from "@/interfaces/Room";
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = process.env.HOSTNAME ? process.env.HOSTNAME : "localhost";
+const hostname = process.env.URL ? String(process.env.URL) : "localhost";
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 
-const app = next({ dev, hostname, port });
+const app = process.env.URL ? next({ dev, hostname }) : next({ dev, hostname, port });
 const handler = app.getRequestHandler();
 
 app.prepare().then(() => {
@@ -19,7 +21,6 @@ app.prepare().then(() => {
 
   io.on("connection", (socket) => {
     roomHandler(io, socket, rooms);
-    socket.emit("hello", "world");
   });
 
   httpServer
@@ -28,6 +29,6 @@ app.prepare().then(() => {
       process.exit(1);
     })
     .listen(port, () => {
-      console.log(`> Ready on http://${hostname}:${port}`);
+      console.log(`> Ready on http://${hostname}`);
     });
 });

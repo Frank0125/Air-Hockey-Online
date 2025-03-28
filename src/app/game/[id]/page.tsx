@@ -1,29 +1,24 @@
 "use client"
 
 import { socket } from "../../../socket";
-import { useEffect, useState, use} from "react";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Image from "next/image";
+
+import { useLoading } from "@/hooks/useLoading";
 import Board from "../../assets/files/Game_Board2.svg";
 import styles from "./page.module.css";
-
 import { Button } from "@/components/Button/Button";
 import { TextInput } from "@/components/TextInput/TextInput"
 import { Title } from "@/components/Title/Title";
+import { NotFound } from "@/components/NotFound/NotFound";
 import { Room } from "@/interfaces/Room"
 
-export default function GameRoom( { params } : { params: Promise<{ id: string }> } ) {
+export default function GameRoom() {
     const [value, setValue] = useState("Mensaje por Defecto");
     const [room, setRoom] = useState<Room | null>(null)
-    const {id} = use(params);
-
-    useEffect(() => {
-        function getRoom(){
-            socket.on("room:get", (arg) =>{
-                setRoom(arg)
-            })
-        }
-        getRoom();
-    }, []);
+    const { id } = useParams();
+    const { loading, setLoading } = useLoading();
 
     function sendMessage() {
         socket.emit("room:update",  id, value, (error : Error, result : string) => {
@@ -33,6 +28,7 @@ export default function GameRoom( { params } : { params: Promise<{ id: string }>
 
             console.log(result);
         });
+        setLoading(false);
     }
 
     function receiveMessage() {
@@ -42,8 +38,26 @@ export default function GameRoom( { params } : { params: Promise<{ id: string }>
             }
             console.log("receiveD?");
         })
+        setLoading(false);
     }
 
+    useEffect(() => {
+        function handleRoomGet(room: Room) {
+            setRoom(room);
+        }
+        function getRoom() {
+            socket.on("room:get", handleRoomGet);
+        }
+        getRoom();
+        if (room === null) {
+            setValue("Null");
+        } else if (room === undefined) {
+            setValue("Undefined");
+        }
+        return () => {
+            socket.off("room:get", handleRoomGet);
+        }
+    }, []);
 
     return (
         <>
@@ -62,17 +76,25 @@ export default function GameRoom( { params } : { params: Promise<{ id: string }>
                 <Button
                     size = "large"
                     text = "Send"
-                    onClick={() => sendMessage()}
+                    onClick={() => {
+                        setLoading(true);
+                        sendMessage();
+                    }}
+                    loading = { loading }
                 />
                 <Button
                     size = "large"
                     text = "Receive"
-                    onClick={() => receiveMessage()}
+                    onClick={() => {
+                        setLoading(true);
+                        receiveMessage();
+                    }}
+                    loading = { loading }
                 />
                 <div className = {styles.img}>
                     <Image
-                        src={Board}
-                        alt="Board"
+                        src = { Board }
+                        alt = "Board"
                     />
                 </div>
             </div>

@@ -46,3 +46,7 @@
     text-decoration: none;
     margin-top: .9rem;
 }
+
+.disabled {
+    pointer-events: none;
+}
